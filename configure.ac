@@ -61,6 +61,12 @@ AC_SUBST(RENDER_CFLAGS)
 
 XORG_CHECK_MALLOC_ZERO
 
+# Check for _XEatDataWords function that may be patched into older Xlib release
+SAVE_LIBS="$LIBS"
+LIBS="$RENDER_LIBS"
+AC_CHECK_FUNCS([_XEatDataWords])
+LIBS="$SAVE_LIBS"
+
 AC_OUTPUT([Makefile
 	   src/Makefile
            xrender.pc])
