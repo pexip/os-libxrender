@@ -1,29 +1,27 @@
-libxrender (1:0.9.6-2ubuntu0.2) precise-security; urgency=medium
+libxrender (1:0.9.8-1) sid; urgency=low
 
-  * SECURITY UPDATE: buffer overflow in MakeBigReq (LP: #1441381)
-    - debian/control: change Build-Depends to libx11 security update
-    - CVE number pending
+  * New upstream release.
+  * Bump debhelper compat level to 7.
+  * Use dpkg-buildflags.
+  * Disable silent build rules.
+  * Use dh_prep instead of dh_clean -k.
 
- -- Marc Deslauriers <marc.deslauriers@ubuntu.com>  Wed, 08 Apr 2015 08:23:37 -0400
+ -- Julien Cristau <jcristau@debian.org>  Sun, 30 Jun 2013 19:34:07 +0200
 
-libxrender (1:0.9.6-2ubuntu0.1) precise-security; urgency=low
+libxrender (1:0.9.7-1+deb7u1) wheezy-security; urgency=high
 
-  * SECURITY UPDATE: denial of service and possible code execution via
-    incorrect memory size calculations
-    - 73e77eb21d649edc1ce1746739f9358e337b2935
-    - e52853974664289fe42a92909667ed77cfa1cec5
-    - 9e577d40322b9e3d8bdefec0eefa44d8ead451a4
-    - 786f78fd8df6d165ccbc81f306fd9f22b5c1551c
-    - CVE-2013-1987
+  * integer overflows calculating memory needs for replies [CVE-2013-1987]
 
- -- Marc Deslauriers <marc.deslauriers@ubuntu.com>  Tue, 28 May 2013 11:14:08 -0400
+ -- Julien Cristau <jcristau@debian.org>  Tue, 14 May 2013 19:28:26 +0200
 
-libxrender (1:0.9.6-2build1) precise; urgency=low
+libxrender (1:0.9.7-1) unstable; urgency=low
 
-  * No-change rebuild against current pkgbinarymangler to fix broken
-    md5sums. (see LP #875466)
+  * New upstream release.
+  * Don't require (fake)root for debian/rules clean.
+  * Add Multi-Arch: same for libxrender-dev.
+  * Bump xutils-dev build-dep for newer macros.
 
- -- Martin Pitt <martin.pitt@ubuntu.com>  Wed, 29 Feb 2012 17:58:51 +0100
+ -- Julien Cristau <jcristau@debian.org>  Sat, 21 Apr 2012 11:44:34 +0200
 
 libxrender (1:0.9.6-2) unstable; urgency=low
 

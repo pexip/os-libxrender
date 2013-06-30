@@ -16,7 +16,7 @@
  * IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS, IN NO EVENT SHALL SuSE
  * BE LIABLE FOR ANY SPECIAL, INDIRECT OR CONSEQUENTIAL DAMAGES OR ANY DAMAGES
  * WHATSOEVER RESULTING FROM LOSS OF USE, DATA OR PROFITS, WHETHER IN AN ACTION
- * OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF OR IN 
+ * OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF OR IN
  * CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
  *
  * Author:  Keith Packard, SuSE, Inc.
@@ -39,7 +39,7 @@ static int XRenderCloseDisplay (Display *dpy, XExtCodes *codes);
  * XextFindDisplay.)
  */
 static XRenderExtDisplayInfo *
-XRenderExtFindDisplay (XRenderExtInfo *extinfo, 
+XRenderExtFindDisplay (XRenderExtInfo *extinfo,
                        Display        *dpy)
 {
     XRenderExtDisplayInfo *dpyinfo;
@@ -47,7 +47,7 @@ XRenderExtFindDisplay (XRenderExtInfo *extinfo,
     /*
      * see if this was the most recently accessed display
      */
-    if ((dpyinfo = extinfo->cur) && dpyinfo->display == dpy) 
+    if ((dpyinfo = extinfo->cur) && dpyinfo->display == dpy)
         return dpyinfo;
 
     /*
@@ -71,8 +71,8 @@ XRenderExtFindDisplay (XRenderExtInfo *extinfo,
  * any screen, tell the application that Render is not present.
  */
 
-#define DEPTH_MASK(d)	(1 << ((d) - 1))
-    
+#define DEPTH_MASK(d)	(1U << ((d) - 1))
+
 /*
  * Render requires support for depth 1, 4, 8, 24 and 32 pixmaps
  */
@@ -82,7 +82,7 @@ XRenderExtFindDisplay (XRenderExtInfo *extinfo,
 			 DEPTH_MASK(8) | \
 			 DEPTH_MASK(24) | \
 			 DEPTH_MASK(32))
-    
+
 typedef struct _DepthCheckRec {
     struct _DepthCheckRec *next;
     Display *dpy;
@@ -205,11 +205,11 @@ XRenderExtAddDisplay (XRenderExtInfo *extinfo,
 	dpyinfo->codes = NULL;
 
     /*
-     * if the server has the extension, then we can initialize the 
+     * if the server has the extension, then we can initialize the
      * appropriate function vectors
      */
     if (dpyinfo->codes) {
-        XESetCloseDisplay (dpy, dpyinfo->codes->extension, 
+        XESetCloseDisplay (dpy, dpyinfo->codes->extension,
                            XRenderCloseDisplay);
     } else {
 	/* The server doesn't have this extension.
@@ -242,7 +242,7 @@ XRenderExtAddDisplay (XRenderExtInfo *extinfo,
  * XRenderExtRemoveDisplay - remove the indicated display from the
  * extension object. (Replaces XextRemoveDisplay.)
  */
-static int 
+static int
 XRenderExtRemoveDisplay (XRenderExtInfo *extinfo, Display *dpy)
 {
     XRenderExtDisplayInfo *dpyinfo, *prev;
@@ -286,7 +286,7 @@ XRenderFindDisplay (Display *dpy)
 
     dpyinfo = XRenderExtFindDisplay (&XRenderExtensionInfo, dpy);
     if (!dpyinfo)
-	dpyinfo = XRenderExtAddDisplay (&XRenderExtensionInfo, dpy, 
+	dpyinfo = XRenderExtAddDisplay (&XRenderExtensionInfo, dpy,
                                         XRenderExtensionName);
     return dpyinfo;
 }
@@ -296,10 +296,10 @@ XRenderCloseDisplay (Display *dpy, XExtCodes *codes)
 {
     XRenderExtDisplayInfo *info = XRenderFindDisplay (dpy);
     if (info && info->info) XFree (info->info);
-    
+
     return XRenderExtRemoveDisplay (&XRenderExtensionInfo, dpy);
 }
-    
+
 /****************************************************************************
  *                                                                          *
  *			    Render public interfaces                        *
@@ -332,8 +332,8 @@ Status XRenderQueryVersion (Display *dpy,
 
     if (!XRenderQueryFormats (dpy))
 	return 0;
-    
-    xri = info->info; 
+
+    xri = info->info;
     *major_versionp = xri->major_version;
     *minor_versionp = xri->minor_version;
     return 1;
@@ -343,7 +343,7 @@ static XRenderPictFormat *
 _XRenderFindFormat (XRenderInfo *xri, PictFormat format)
 {
     int	nf;
-    
+
     for (nf = 0; nf < xri->nformat; nf++)
 	if (xri->format[nf].id == format)
 	    return &xri->format[nf];
@@ -361,7 +361,7 @@ typedef struct _renderVersionState {
     Bool	    error;
     int		    major_version;
     int		    minor_version;
-    
+
 } _XrenderVersionState;
 
 static Bool
@@ -414,7 +414,7 @@ XRenderQueryFormats (Display *dpy)
     int				nf, ns, nd, nv;
     unsigned long		rlength;
     unsigned long		nbytes;
-    
+
     RenderCheckExtension (dpy, info, 0);
     LockDisplay (dpy);
     if (info->info)
@@ -427,19 +427,19 @@ XRenderQueryFormats (Display *dpy)
     vreq->renderReqType = X_RenderQueryVersion;
     vreq->majorVersion = RENDER_MAJOR;
     vreq->minorVersion = RENDER_MINOR;
-    
+
     async_state.version_seq = dpy->request;
     async_state.error = False;
     async.next = dpy->async_handlers;
     async.handler = _XRenderVersionHandler;
     async.data = (XPointer) &async_state;
     dpy->async_handlers = &async;
-    
+
     GetReq (RenderQueryPictFormats, req);
     req->reqType = info->codes->major_opcode;
     req->renderReqType = X_RenderQueryPictFormats;
-    
-    if (!_XReply (dpy, (xReply *) &rep, 0, xFalse)) 
+
+    if (!_XReply (dpy, (xReply *) &rep, 0, xFalse))
     {
 	DeqAsyncHandler (dpy, &async);
 	UnlockDisplay (dpy);
@@ -458,7 +458,7 @@ XRenderQueryFormats (Display *dpy)
      */
     if (async_state.major_version == 0 && async_state.minor_version < 6)
 	rep.numSubpixel = 0;
-	
+
     if ((rep.numFormats < ((INT_MAX / 4) / sizeof (XRenderPictFormat))) &&
 	(rep.numScreens < ((INT_MAX / 4) / sizeof (XRenderScreen))) &&
 	(rep.numDepths  < ((INT_MAX / 4) / sizeof (XRenderDepth))) &&
@@ -482,7 +482,7 @@ XRenderQueryFormats (Display *dpy)
 	xData = NULL;
 	rlength = nbytes = 0;
     }
-    
+
     if (!xri || !xData || nbytes < rlength)
     {
 	if (xri) Xfree (xri);
@@ -550,7 +550,7 @@ XRenderQueryFormats (Display *dpy)
 	    xDepth = (xPictDepth *) xVisual;
 	}
 	screen++;
-	xScreen = (xPictScreen *) xDepth;	    
+	xScreen = (xPictScreen *) xDepth;
     }
     xSubpixel = (CARD32 *) xScreen;
     screen = xri->screen;
@@ -566,7 +566,7 @@ XRenderQueryFormats (Display *dpy)
      */
     if (nbytes > rlength)
 	_XEatData (dpy, (unsigned long) (nbytes - rlength));
-    
+
     UnlockDisplay (dpy);
     SyncHandle ();
     Xfree (xData);
@@ -708,7 +708,7 @@ XRenderFindStandardFormat (Display  *dpy,
 		},
 		0,			    /* colormap */
 	    },
-	    PictFormatType | 
+	    PictFormatType |
 	    PictFormatDepth |
 	    PictFormatRed |
 	    PictFormatRedMask |
@@ -737,7 +737,7 @@ XRenderFindStandardFormat (Display  *dpy,
 		},
 		0,			    /* colormap */
 	    },
-	    PictFormatType | 
+	    PictFormatType |
 	    PictFormatDepth |
 	    PictFormatRed |
 	    PictFormatRedMask |
@@ -765,7 +765,7 @@ XRenderFindStandardFormat (Display  *dpy,
 		},
 		0,			    /* colormap */
 	    },
-	    PictFormatType | 
+	    PictFormatType |
 	    PictFormatDepth |
 	    PictFormatRedMask |
 	    PictFormatGreenMask |
@@ -791,7 +791,7 @@ XRenderFindStandardFormat (Display  *dpy,
 		},
 		0,			    /* colormap */
 	    },
-	    PictFormatType | 
+	    PictFormatType |
 	    PictFormatDepth |
 	    PictFormatRedMask |
 	    PictFormatGreenMask |
@@ -817,7 +817,7 @@ XRenderFindStandardFormat (Display  *dpy,
 		},
 		0,			    /* colormap */
 	    },
-	    PictFormatType | 
+	    PictFormatType |
 	    PictFormatDepth |
 	    PictFormatRedMask |
 	    PictFormatGreenMask |
@@ -828,7 +828,7 @@ XRenderFindStandardFormat (Display  *dpy,
     };
 
     if (0 <= format && format < PictStandardNUM)
-	return XRenderFindFormat (dpy, 
+	return XRenderFindFormat (dpy,
 				  standardFormats[format].mask,
 				  &standardFormats[format].templ,
 				  0);
@@ -889,7 +889,7 @@ XRenderQueryPictIndexValues(Display			*dpy,
     for(i = 0; i < rep.numIndexValues; i++)
     {
 	xIndexValue value;
-	
+
 	_XRead (dpy, (char *) &value, SIZEOF (xIndexValue));
 	values[i].pixel = value.pixel;
 	values[i].red = value.red;
