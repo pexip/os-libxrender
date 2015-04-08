@@ -1,3 +1,11 @@
+libxrender (1:0.9.6-2ubuntu0.2) precise-security; urgency=medium
+
+  * SECURITY UPDATE: buffer overflow in MakeBigReq (LP: #1441381)
+    - debian/control: change Build-Depends to libx11 security update
+    - CVE number pending
+
+ -- Marc Deslauriers <marc.deslauriers@ubuntu.com>  Wed, 08 Apr 2015 08:23:37 -0400
+
 libxrender (1:0.9.6-2ubuntu0.1) precise-security; urgency=low
 
   * SECURITY UPDATE: denial of service and possible code execution via
