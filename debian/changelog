@@ -1,3 +1,17 @@
+libxrender (1:0.9.6-2ubuntu0.2pexip1) pexip; urgency=low
+
+  * New upstream release
+
+ -- John-Mark Bell <jmb@pexip.com>  Mon, 01 Jun 2015 16:49:32 +0100
+
+libxrender (1:0.9.6-2ubuntu0.2) precise-security; urgency=medium
+
+  * SECURITY UPDATE: buffer overflow in MakeBigReq (LP: #1441381)
+    - debian/control: change Build-Depends to libx11 security update
+    - CVE number pending
+
+ -- Marc Deslauriers <marc.deslauriers@ubuntu.com>  Wed, 08 Apr 2015 08:23:37 -0400
+
 libxrender (1:0.9.6-2ubuntu0.1pexip1) pexip; urgency=low
 
   * Prepare Pexip packaging
