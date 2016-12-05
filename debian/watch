@@ -1,3 +1,4 @@
 #git=git://anongit.freedesktop.org/xorg/lib/libXrender
 version=3
-http://xorg.freedesktop.org/releases/individual/lib/ libXrender-(.*)\.tar\.gz
+opts=pgpsigurlmangle=s/$/.sig/ \
+https://xorg.freedesktop.org/releases/individual/lib/ libXrender-(.*)\.tar\.gz
