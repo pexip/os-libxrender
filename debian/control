@@ -17,7 +17,7 @@ Build-Depends:
 Standards-Version: 3.9.2
 Vcs-Git: git://git.debian.org/git/pkg-xorg/lib/libxrender
 Vcs-Browser: http://git.debian.org/?p=pkg-xorg/lib/libxrender.git
-XS-Pexip-Upstream: http://archive.ubuntu.com/ubuntu/ precise
+XS-Pexip-Upstream: http://ftp.debian.org/debian/ jessie
 
 Package: libxrender1
 Section: libs
