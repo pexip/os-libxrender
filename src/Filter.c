@@ -26,7 +26,7 @@
 #endif
 #include "Xrenderint.h"
 #include <limits.h>
- 
+
 XFilters *
 XRenderQueryFilters (Display *dpy, Drawable drawable)
 {
@@ -39,7 +39,7 @@ XRenderQueryFilters (Display *dpy, Drawable drawable)
     char			len;
     int				i;
     unsigned long		nbytes, nbytesAlias, nbytesName;
-    
+
     if (!RenderHasExtension (info))
 	return NULL;
 
@@ -49,7 +49,7 @@ XRenderQueryFilters (Display *dpy, Drawable drawable)
     xri = info->info;
     if (xri->minor_version < 6)
 	return NULL;
-    
+
     LockDisplay (dpy);
     GetReq (RenderQueryFilters, req);
     req->reqType = info->codes->major_opcode;
@@ -61,7 +61,7 @@ XRenderQueryFilters (Display *dpy, Drawable drawable)
 	SyncHandle ();
 	return NULL;
     }
-    
+
     /*
      * Limit each component of combined size to 1/4 the max, which is far
      * more than they should ever possibly need.
@@ -103,7 +103,7 @@ XRenderQueryFilters (Display *dpy, Drawable drawable)
      *	numAliases  short alias values
      *	nbytesName  char strings
      */
-    
+
     filters->nfilter = rep.numFilters;
     filters->nalias = rep.numAliases;
     filters->filter = (char **) (filters + 1);
@@ -132,7 +132,7 @@ XRenderQueryFilters (Display *dpy, Drawable drawable)
 
     if (i & 3)
 	_XEatData (dpy, 4 - (i & 3));
-    
+
     UnlockDisplay (dpy);
     SyncHandle ();
     return filters;
