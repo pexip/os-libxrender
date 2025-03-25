@@ -1,9 +1,20 @@
-libxrender (1:0.9.10-1.1) unstable; urgency=medium
+libxrender (1:0.9.12-1) unstable; urgency=medium
 
-  * Non maintainer upload by the Reproducible Builds team.
-  * No source change upload to rebuild on buildd with .buildinfo files.
+  [ Timo Aaltonen ]
+  * control: Migrate to x11proto-dev.
+  * New upstream release. (Closes: #1101290)
+  * control: Migrate to pkgconf.
+  * control: Update vcs urls.
+  * Migrate to debhelper-compat 13.
+  * rules: Drop old dbgsym migration.
+  * control: Bump policy to 4.7.2.
 
- -- Holger Levsen <holger@debian.org>  Tue, 14 Jun 2022 15:01:30 +0200
+  [ Debian Janitor ]
+  * Remove constraints unnecessary since buster:
+    + Build-Depends: Drop versioned constraint on libx11-dev and xutils-dev.
+    + libxrender-dev: Drop versioned constraint on libx11-dev in Depends.
+
+ -- Timo Aaltonen <tjaalton@debian.org>  Tue, 25 Mar 2025 14:48:17 +0200
 
 libxrender (1:0.9.10-1) unstable; urgency=medium
 

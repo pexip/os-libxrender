@@ -3,15 +3,14 @@ Section: x11
 Priority: optional
 Maintainer: Debian X Strike Force <debian-x@lists.debian.org>
 Build-Depends:
- debhelper (>= 10),
- pkg-config,
- libx11-dev (>= 2:1.6),
- x11proto-render-dev,
- x11proto-core-dev,
- xutils-dev (>= 1:7.5+4),
-Standards-Version: 3.9.8
-Vcs-Git: https://anonscm.debian.org/git/pkg-xorg/lib/libxrender.git
-Vcs-Browser: https://anonscm.debian.org/cgit/pkg-xorg/lib/libxrender.git
+ debhelper-compat (= 13),
+ pkgconf,
+ libx11-dev,
+ x11proto-dev,
+ xutils-dev,
+Standards-Version: 4.7.2
+Vcs-Git: https://salsa.debian.org/xorg-team/lib/libxrender.git
+Vcs-Browser: https://salsa.debian.org/xorg-team/lib/libxrender
 
 Package: libxrender1
 Section: libs
@@ -50,9 +49,8 @@ Architecture: any
 Multi-Arch: same
 Depends:
  libxrender1 (= ${binary:Version}),
- libx11-dev (>= 2:1.0.0),
- x11proto-render-dev,
- x11proto-core-dev,
+ libx11-dev,
+ x11proto-dev,
  ${misc:Depends},
 Description: X Rendering Extension client library (development files)
  The X Rendering Extension (Render) introduces digital image composition as
