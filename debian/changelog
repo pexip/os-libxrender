@@ -1,3 +1,21 @@
+libxrender (1:0.9.12-1) unstable; urgency=medium
+
+  [ Timo Aaltonen ]
+  * control: Migrate to x11proto-dev.
+  * New upstream release. (Closes: #1101290)
+  * control: Migrate to pkgconf.
+  * control: Update vcs urls.
+  * Migrate to debhelper-compat 13.
+  * rules: Drop old dbgsym migration.
+  * control: Bump policy to 4.7.2.
+
+  [ Debian Janitor ]
+  * Remove constraints unnecessary since buster:
+    + Build-Depends: Drop versioned constraint on libx11-dev and xutils-dev.
+    + libxrender-dev: Drop versioned constraint on libx11-dev in Depends.
+
+ -- Timo Aaltonen <tjaalton@debian.org>  Tue, 25 Mar 2025 14:48:17 +0200
+
 libxrender (1:0.9.10-1.1+pexip24u3) pexip-bookworm; urgency=medium
 
   * New versioning scheme
@@ -15,13 +33,6 @@ libxrender (1:0.9.10-1.1pexip1) pexip-bookworm; urgency=medium
   * Initial bookworm build
 
  -- Mark Hymers <mark.hymers@pexip.com>  Thu, 16 Nov 2023 10:09:11 +0000
-
-libxrender (1:0.9.10-1.1) unstable; urgency=medium
-
-  * Non maintainer upload by the Reproducible Builds team.
-  * No source change upload to rebuild on buildd with .buildinfo files.
-
- -- Holger Levsen <holger@debian.org>  Tue, 14 Jun 2022 15:01:30 +0200
 
 libxrender (1:0.9.10-1pexip5) pexip-bullseye; urgency=medium
 
@@ -537,3 +548,4 @@ xrender (0.8.1-1) unstable; urgency=low
 
  -- Branden Robinson <branden@debian.org>  Sun,  4 May 2003 13:14:54 -0500
 
+vim:set ai tw=78 et sw=2 sts=2:

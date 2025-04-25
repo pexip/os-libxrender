@@ -98,14 +98,17 @@ XRenderDepthCheckErrorHandler (Display *dpy, XErrorEvent *evt)
     if (evt->request_code == X_CreatePixmap && evt->error_code == BadValue)
     {
 	DepthCheckPtr	d;
+
 	_XLockMutex(_Xglobal_lock);
 	for (d = depthChecks; d; d = d->next)
+	{
 	    if (d->dpy == dpy)
 	    {
 		if ((long) (evt->serial - d->serial) >= 0)
 		    d->missing |= DEPTH_MASK(evt->resourceid);
 		break;
 	    }
+        }
 	_XUnlockMutex (_Xglobal_lock);
     }
     return 0;
@@ -158,7 +161,7 @@ XRenderHasDepths (Display *dpy)
 		if ((missing & DEPTH_MASK(d)) && d != 1)
 		{
 		    Pixmap  p;
-		    p = XCreatePixmap (dpy, RootWindow (dpy, s), 1, 1, d);
+		    p = XCreatePixmap (dpy, RootWindow (dpy, s), 1, 1, (unsigned) d);
 		    XFreePixmap (dpy, p);
 		}
 	    XSync (dpy, False);
@@ -194,7 +197,7 @@ XRenderExtAddDisplay (XRenderExtInfo *extinfo,
 {
     XRenderExtDisplayInfo *dpyinfo;
 
-    dpyinfo = (XRenderExtDisplayInfo *) Xmalloc (sizeof (XRenderExtDisplayInfo));
+    dpyinfo = Xmalloc (sizeof (XRenderExtDisplayInfo));
     if (!dpyinfo) return NULL;
     dpyinfo->display = dpy;
     dpyinfo->info = NULL;
@@ -273,7 +276,7 @@ XRenderExtRemoveDisplay (XRenderExtInfo *extinfo, Display *dpy)
     if (dpyinfo == extinfo->cur) extinfo->cur = NULL;  /* flush cache */
     _XUnlockMutex(_Xglobal_lock);
 
-    Xfree ((char *) dpyinfo);
+    Xfree (dpyinfo);
     return 1;
 }
 
@@ -291,11 +294,21 @@ XRenderFindDisplay (Display *dpy)
     return dpyinfo;
 }
 
+static void
+XRenderFreeXRenderInfo (XRenderInfo *xri)
+{
+    Xfree(xri->format);
+    Xfree(xri->screen);
+    Xfree(xri->depth);
+    Xfree(xri->visual);
+    Xfree(xri);
+}
+
 static int
-XRenderCloseDisplay (Display *dpy, XExtCodes *codes)
+XRenderCloseDisplay (Display *dpy, XExtCodes *codes _X_UNUSED)
 {
     XRenderExtDisplayInfo *info = XRenderFindDisplay (dpy);
-    if (info && info->info) XFree (info->info);
+    if (info && info->info) XRenderFreeXRenderInfo (info->info);
 
     return XRenderExtRemoveDisplay (&XRenderExtensionInfo, dpy);
 }
@@ -386,15 +399,15 @@ _XRenderVersionHandler (Display	    *dpy,
 	_XGetAsyncReply(dpy, (char *)&replbuf, rep, buf, len,
 		     (SIZEOF(xRenderQueryVersionReply) - SIZEOF(xReply)) >> 2,
 			True);
-    state->major_version = repl->majorVersion;
-    state->minor_version = repl->minorVersion;
+    state->major_version = (int) repl->majorVersion;
+    state->minor_version = (int) repl->minorVersion;
     return True;
 }
 
 Status
 XRenderQueryFormats (Display *dpy)
 {
-    XRenderExtDisplayInfo		*info = XRenderFindDisplay (dpy);
+    XRenderExtDisplayInfo	*info = XRenderFindDisplay (dpy);
     _XAsyncHandler		async;
     _XrenderVersionState	async_state;
     xRenderQueryVersionReq	*vreq;
@@ -407,11 +420,12 @@ XRenderQueryFormats (Display *dpy)
     XRenderVisual		*visual;
     xPictFormInfo		*xFormat;
     xPictScreen			*xScreen;
-    xPictDepth			*xDepth;
+    xPictDepth			*xPDepth;
     xPictVisual			*xVisual;
     CARD32			*xSubpixel;
     void			*xData;
-    int				nf, ns, nd, nv;
+    int				ns, nd;
+    unsigned			nf;
     unsigned long		rlength;
     unsigned long		nbytes;
 
@@ -423,7 +437,7 @@ XRenderQueryFormats (Display *dpy)
 	return 1;
     }
     GetReq (RenderQueryVersion, vreq);
-    vreq->reqType = info->codes->major_opcode;
+    vreq->reqType = (CARD8) info->codes->major_opcode;
     vreq->renderReqType = X_RenderQueryVersion;
     vreq->majorVersion = RENDER_MAJOR;
     vreq->minorVersion = RENDER_MINOR;
@@ -436,7 +450,7 @@ XRenderQueryFormats (Display *dpy)
     dpy->async_handlers = &async;
 
     GetReq (RenderQueryPictFormats, req);
-    req->reqType = info->codes->major_opcode;
+    req->reqType = (CARD8) info->codes->major_opcode;
     req->renderReqType = X_RenderQueryPictFormats;
 
     if (!_XReply (dpy, (xReply *) &rep, 0, xFalse))
@@ -465,11 +479,8 @@ XRenderQueryFormats (Display *dpy)
 	(rep.numVisuals < ((INT_MAX / 4) / sizeof (XRenderVisual))) &&
 	(rep.numSubpixel < ((INT_MAX / 4) / 4)) &&
 	(rep.length < (INT_MAX >> 2)) ) {
-	xri = Xmalloc (sizeof (XRenderInfo) +
-		       (rep.numFormats * sizeof (XRenderPictFormat)) +
-		       (rep.numScreens * sizeof (XRenderScreen)) +
-		       (rep.numDepths * sizeof (XRenderDepth)) +
-		       (rep.numVisuals * sizeof (XRenderVisual)));
+        /* Zero-initialize so that pointers are NULL if there is a failure. */
+	xri = Xcalloc (1, sizeof (XRenderInfo));
 	rlength = ((rep.numFormats * sizeof (xPictFormInfo)) +
 		   (rep.numScreens * sizeof (xPictScreen)) +
 		   (rep.numDepths * sizeof (xPictDepth)) +
@@ -494,15 +505,24 @@ XRenderQueryFormats (Display *dpy)
     }
     xri->major_version = async_state.major_version;
     xri->minor_version = async_state.minor_version;
-    xri->format = (XRenderPictFormat *) (xri + 1);
-    xri->nformat = rep.numFormats;
-    xri->screen = (XRenderScreen *) (xri->format + rep.numFormats);
-    xri->nscreen = rep.numScreens;
-    xri->depth = (XRenderDepth *) (xri->screen + rep.numScreens);
-    xri->ndepth = rep.numDepths;
-    xri->visual = (XRenderVisual *) (xri->depth + rep.numDepths);
-    xri->nvisual = rep.numVisuals;
-    _XRead (dpy, (char *) xData, rlength);
+    xri->format = Xcalloc(rep.numFormats, sizeof(XRenderPictFormat));
+    xri->nformat = (int) rep.numFormats;
+    xri->screen = Xcalloc(rep.numScreens, sizeof(XRenderScreen));
+    xri->nscreen = (int) rep.numScreens;
+    xri->depth = Xcalloc(rep.numDepths, sizeof(XRenderDepth));
+    xri->ndepth = (int) rep.numDepths;
+    xri->visual = Xcalloc(rep.numVisuals, sizeof(XRenderVisual));
+    xri->nvisual = (int) rep.numVisuals;
+    if (!xri->format || !xri->screen || !xri->depth || !xri->visual)
+    {
+	XRenderFreeXRenderInfo(xri);
+	Xfree (xData);
+	_XEatDataWords (dpy, rep.length);
+	UnlockDisplay (dpy);
+	SyncHandle ();
+	return 0;
+    }
+    _XRead (dpy, (char *) xData, (long) rlength);
     format = xri->format;
     xFormat = (xPictFormInfo *) xData;
     for (nf = 0; nf < rep.numFormats; nf++)
@@ -510,14 +530,14 @@ XRenderQueryFormats (Display *dpy)
 	format->id = xFormat->id;
 	format->type = xFormat->type;
 	format->depth = xFormat->depth;
-	format->direct.red = xFormat->direct.red;
-	format->direct.redMask = xFormat->direct.redMask;
-	format->direct.green = xFormat->direct.green;
-	format->direct.greenMask = xFormat->direct.greenMask;
-	format->direct.blue = xFormat->direct.blue;
-	format->direct.blueMask = xFormat->direct.blueMask;
-	format->direct.alpha = xFormat->direct.alpha;
-	format->direct.alphaMask = xFormat->direct.alphaMask;
+	format->direct.red       = (short) xFormat->direct.red;
+	format->direct.redMask   = (short) xFormat->direct.redMask;
+	format->direct.green     = (short) xFormat->direct.green;
+	format->direct.greenMask = (short) xFormat->direct.greenMask;
+	format->direct.blue      = (short) xFormat->direct.blue;
+	format->direct.blueMask  = (short) xFormat->direct.blueMask;
+	format->direct.alpha     = (short) xFormat->direct.alpha;
+	format->direct.alphaMask = (short) xFormat->direct.alphaMask;
 	format->colormap = xFormat->colormap;
 	format++;
 	xFormat++;
@@ -529,34 +549,36 @@ XRenderQueryFormats (Display *dpy)
     for (ns = 0; ns < xri->nscreen; ns++)
     {
 	screen->depths = depth;
-	screen->ndepths = xScreen->nDepth;
+	screen->ndepths = (int) xScreen->nDepth;
 	screen->fallback = _XRenderFindFormat (xri, xScreen->fallback);
 	screen->subpixel = SubPixelUnknown;
-	xDepth = (xPictDepth *) (xScreen + 1);
+	xPDepth = (xPictDepth *) (xScreen + 1);
 	if (screen->ndepths > rep.numDepths) {
-	    Xfree (xri);
+	    XRenderFreeXRenderInfo(xri);
 	    Xfree (xData);
 	    _XEatDataWords (dpy, rep.length);
 	    UnlockDisplay (dpy);
 	    SyncHandle ();
 	    return 0;
 	}
-	rep.numDepths -= screen->ndepths;
+	rep.numDepths -= (CARD32) screen->ndepths;
 	for (nd = 0; nd < screen->ndepths; nd++)
 	{
-	    depth->depth = xDepth->depth;
-	    depth->nvisuals = xDepth->nPictVisuals;
+	    int nv;
+
+	    depth->depth = xPDepth->depth;
+	    depth->nvisuals = xPDepth->nPictVisuals;
 	    depth->visuals = visual;
-	    xVisual = (xPictVisual *) (xDepth + 1);
+	    xVisual = (xPictVisual *) (xPDepth + 1);
 	    if (depth->nvisuals > rep.numVisuals) {
-		Xfree (xri);
+		XRenderFreeXRenderInfo (xri);
 		Xfree (xData);
 		_XEatDataWords (dpy, rep.length);
 		UnlockDisplay (dpy);
 		SyncHandle ();
 		return 0;
 	    }
-	    rep.numVisuals -= depth->nvisuals;
+	    rep.numVisuals -= (CARD32) depth->nvisuals;
 	    for (nv = 0; nv < depth->nvisuals; nv++)
 	    {
 		visual->visual = _XRenderFindVisual (dpy, xVisual->visual);
@@ -565,16 +587,16 @@ XRenderQueryFormats (Display *dpy)
 		xVisual++;
 	    }
 	    depth++;
-	    xDepth = (xPictDepth *) xVisual;
+	    xPDepth = (xPictDepth *) xVisual;
 	}
 	screen++;
-	xScreen = (xPictScreen *) xDepth;
+	xScreen = (xPictScreen *) xPDepth;
     }
     xSubpixel = (CARD32 *) xScreen;
     screen = xri->screen;
     for (ns = 0; ns < rep.numSubpixel; ns++)
     {
-	screen->subpixel = *xSubpixel;
+	screen->subpixel = (int) *xSubpixel;
 	xSubpixel++;
 	screen++;
     }
@@ -858,19 +880,19 @@ XRenderQueryPictIndexValues(Display			*dpy,
 			    _Xconst XRenderPictFormat	*format,
 			    int				*num)
 {
-    XRenderExtDisplayInfo			*info = XRenderFindDisplay (dpy);
+    XRenderExtDisplayInfo		*info = XRenderFindDisplay (dpy);
     xRenderQueryPictIndexValuesReq	*req;
     xRenderQueryPictIndexValuesReply	rep;
     XIndexValue				*values;
-    unsigned int			nbytes, nread, rlength, i;
+    unsigned int			nbytes, nread, i;
 
     RenderCheckExtension (dpy, info, NULL);
 
     LockDisplay (dpy);
     GetReq (RenderQueryPictIndexValues, req);
-    req->reqType = info->codes->major_opcode;
+    req->reqType       = (CARD8) info->codes->major_opcode;
     req->renderReqType = X_RenderQueryPictIndexValues;
-    req->format = format->id;
+    req->format        = (CARD32) format->id;
     if (!_XReply (dpy, (xReply *) &rep, 0, xFalse))
     {
 	UnlockDisplay (dpy);
@@ -880,17 +902,18 @@ XRenderQueryPictIndexValues(Display			*dpy,
 
     if ((rep.length < (INT_MAX >> 2)) &&
 	(rep.numIndexValues < (INT_MAX / sizeof (XIndexValue)))) {
+	unsigned int rlength;
 	/* request data length */
 	nbytes = rep.length << 2;
 	/* bytes of actual data in the request */
 	nread = rep.numIndexValues * SIZEOF (xIndexValue);
 	/* size of array returned to application */
-	rlength = rep.numIndexValues * sizeof (XIndexValue);
+	rlength = (unsigned) ((unsigned long) rep.numIndexValues * sizeof (XIndexValue));
 
 	/* allocate returned data */
 	values = Xmalloc (rlength);
     } else {
-	nbytes = nread = rlength = 0;
+	nbytes = nread = 0;
 	values = NULL;
     }
 
@@ -903,8 +926,8 @@ XRenderQueryPictIndexValues(Display			*dpy,
     }
 
     /* read the values one at a time and convert */
-    *num = rep.numIndexValues;
-    for(i = 0; i < rep.numIndexValues; i++)
+    *num = (int) rep.numIndexValues;
+    for (i = 0; i < rep.numIndexValues; i++)
     {
 	xIndexValue value;
 
